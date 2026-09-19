@@ -65,3 +65,35 @@ export async function markAttendance(eventId: string, memberId: string, status: 
   revalidatePath(`/dashboard/events/${eventId}/attendance`);
   return { ok: true };
 }
+
+export async function rsvpEvent(eventId: string, status: string) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user) return { ok: false, error: "Unauthorized" };
+
+  // Fetch the current user's member ID
+  const { data: member } = await supabase
+    .from("members")
+    .select("id")
+    .eq("user_id", userData.user.id)
+    .single();
+
+  if (!member) return { ok: false, error: "Member profile not found." };
+
+  const { error } = await supabase
+    .from("event_attendance")
+    .upsert(
+      {
+        event_id: eventId,
+        member_id: member.id,
+        status: status, // 'present' for attending, 'absent' for not attending
+        recorded_by: userData.user.id,
+        created_at: new Date().toISOString(),
+      },
+      { onConflict: 'event_id,member_id' }
+    );
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/dashboard/events");
+  return { ok: true };
+}

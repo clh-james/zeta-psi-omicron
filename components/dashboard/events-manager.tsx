@@ -5,7 +5,7 @@ import { Plus, Trash2, Calendar, MapPin, Globe, Map as MapIcon, Building2, Clock
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createEvent, deleteEvent } from "@/app/dashboard/events/actions";
+import { createEvent, deleteEvent, rsvpEvent } from "@/app/dashboard/events/actions";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
@@ -29,11 +29,15 @@ export function EventsManager({
   regions,
   chapters,
   canManage,
+  currentMemberId,
+  userRsvps = {},
 }: {
   events: FraternityEvent[];
   regions: Region[];
   chapters: Chapter[];
   canManage: boolean;
+  currentMemberId?: string | null;
+  userRsvps?: Record<string, string>;
 }) {
   const [isPending, startTransition] = useTransition();
   const [isCreating, setIsCreating] = useState(false);
@@ -78,6 +82,12 @@ export function EventsManager({
     if (!confirm("Are you sure you want to delete this event?")) return;
     startTransition(async () => {
       await deleteEvent(id);
+    });
+  }
+
+  function handleRsvp(eventId: string, status: string) {
+    startTransition(async () => {
+      await rsvpEvent(eventId, status);
     });
   }
 
@@ -257,6 +267,34 @@ export function EventsManager({
               {e.description && (
                 <div className="mt-4 whitespace-pre-wrap text-sm text-parchment-muted/90 leading-relaxed border-t border-onyx-line pt-4">
                   {e.description}
+                </div>
+              )}
+
+              {currentMemberId && (
+                <div className="mt-6 pt-4 border-t border-onyx-line flex items-center justify-between">
+                  <div className="text-sm text-parchment-muted">
+                    Will you be attending this event?
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={userRsvps[e.id] === 'present' ? 'gold' : 'outline'}
+                      onClick={() => handleRsvp(e.id, 'present')}
+                      disabled={isPending}
+                      className={userRsvps[e.id] === 'present' ? 'bg-green-600 hover:bg-green-700 text-white' : 'border-green-600/30 text-green-500 hover:bg-green-500/10'}
+                    >
+                      Attending
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={userRsvps[e.id] === 'absent' ? 'gold' : 'outline'}
+                      onClick={() => handleRsvp(e.id, 'absent')}
+                      disabled={isPending}
+                      className={userRsvps[e.id] === 'absent' ? '' : 'border-red-500/30 text-red-500 hover:bg-red-500/10'}
+                    >
+                      Not Attending
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

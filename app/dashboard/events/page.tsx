@@ -6,6 +6,9 @@ export default async function EventsPage() {
   const { data: userData } = await supabase.auth.getUser();
 
   let canManage = false;
+  let currentMemberId = null;
+  let userRsvps: Record<string, string> = {};
+
   if (userData?.user) {
     const { data: profile } = await supabase
       .from("users")
@@ -13,6 +16,24 @@ export default async function EventsPage() {
       .eq("id", userData.user.id)
       .single();
     canManage = ["super_admin", "national_officer", "regional_officer", "chapter_officer"].includes(profile?.role || "");
+
+    const { data: member } = await supabase
+      .from("members")
+      .select("id")
+      .eq("user_id", userData.user.id)
+      .single();
+    
+    if (member) {
+      currentMemberId = member.id;
+      const { data: attendance } = await supabase
+        .from("event_attendance")
+        .select("event_id, status")
+        .eq("member_id", member.id);
+      
+      attendance?.forEach(record => {
+        userRsvps[record.event_id] = record.status;
+      });
+    }
   }
 
   // Fetch upcoming events
@@ -53,7 +74,9 @@ export default async function EventsPage() {
         events={events} 
         regions={regions || []} 
         chapters={chapters || []} 
-        canManage={canManage} 
+        canManage={canManage}
+        currentMemberId={currentMemberId}
+        userRsvps={userRsvps}
       />
     </div>
   );
