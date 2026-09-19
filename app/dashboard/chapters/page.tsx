@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { OrganizationsManager } from "@/components/dashboard/organizations-manager";
 import { requireRole } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 export default async function ChaptersAndRegionsPage() {
   const supabase = await createClient();
   await requireRole(["super_admin", "national_officer", "regional_officer"]);

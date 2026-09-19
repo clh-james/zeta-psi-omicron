@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AnnouncementsManager } from "@/components/dashboard/announcements-manager";
 import { requireRole } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 export default async function AnnouncementsPage() {
   const supabase = await createClient();
   const { profile } = await requireRole(["super_admin", "national_officer", "regional_officer", "chapter_officer", "member"]);
