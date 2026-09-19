@@ -45,21 +45,22 @@ export default function Home() {
           <div className="absolute inset-0 bg-seal-radial opacity-40"></div>
           
           <div className="container relative mx-auto flex max-w-6xl flex-col items-center text-center">
-            <div className="mb-8 h-40 w-40 animate-seal-in overflow-hidden rounded-full shadow-[0_0_40px_rgba(255,215,0,0.15)] border border-gold/20">
+            <div className="mb-10 h-56 w-56 sm:h-64 sm:w-64 animate-seal-in overflow-hidden rounded-full shadow-[0_0_60px_rgba(255,215,0,0.2)] border-2 border-gold/30 relative">
+              <div className="absolute inset-0 bg-gold/10 mix-blend-overlay"></div>
               <Image
                 src="/zeta-psi-omicron-seal.png"
                 alt="Zeta Psi Omicron 3D Seal"
-                width={160}
-                height={160}
+                width={256}
+                height={256}
                 className="h-full w-full object-cover"
                 priority
               />
             </div>
             
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-light">
+            <p className="mb-4 text-sm sm:text-base font-bold uppercase tracking-[0.4em] text-gold">
               One Brotherhood. One Nation.
             </p>
-            <h1 className="mb-6 font-display text-4xl font-bold leading-tight text-parchment sm:text-5xl md:text-6xl">
+            <h1 className="mb-6 font-display text-4xl font-bold leading-tight text-parchment sm:text-6xl md:text-7xl drop-shadow-lg">
               National Member <br className="hidden sm:inline" />
               Information System
             </h1>
