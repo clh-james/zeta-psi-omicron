@@ -161,7 +161,7 @@ export default function BiodataPage() {
           <p className="text-parchment-muted mt-2">Maintain your official fraternity record. All changes must be verified by an officer.</p>
         </div>
         <div className="flex gap-3">
-          <Badge variant="outline" className={`border-onyx-line ${memberData.registration_status === 'approved' ? 'text-green-500' : 'text-gold'}`}>
+          <Badge variant="secondary" className={`border-onyx-line ${memberData.registration_status === 'approved' ? 'text-green-500' : 'text-gold'} bg-transparent border`}>
             Status: {memberData.registration_status?.toUpperCase() || "DRAFT"}
           </Badge>
         </div>
