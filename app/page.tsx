@@ -12,8 +12,8 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 overflow-hidden rounded-full shadow-emboss">
               <Image
-                src="/zeta-psi-omicron-seal.png"
-                alt="Zeta Psi Omicron Seal"
+                src="/zeta-psi-omicron-seal-3d.jpg"
+                alt="Zeta Psi Omicron 3D Seal"
                 width={40}
                 height={40}
                 className="h-full w-full object-cover"
@@ -45,27 +45,15 @@ export default function Home() {
           <div className="absolute inset-0 bg-seal-radial opacity-40"></div>
           
           <div className="container relative mx-auto flex max-w-6xl flex-col items-center text-center">
-            <div className="mb-8 flex items-center justify-center gap-6 animate-seal-in">
-              <div className="h-32 w-32 overflow-hidden rounded-full shadow-emboss border-2 border-gold/40">
-                <Image
-                  src="/zeta-psi-omicron-seal.png"
-                  alt="Zeta Psi Omicron Fraternity Seal"
-                  width={128}
-                  height={128}
-                  className="h-full w-full object-cover bg-onyx-raised"
-                  priority
-                />
-              </div>
-              <div className="h-32 w-32 overflow-hidden rounded-full shadow-emboss border-2 border-gold/40">
-                <Image
-                  src="/psi-zeta-omicron-seal.png"
-                  alt="Psi Zeta Omicron Sorority Seal"
-                  width={128}
-                  height={128}
-                  className="h-full w-full object-cover bg-onyx-raised"
-                  priority
-                />
-              </div>
+            <div className="mb-8 h-40 w-40 animate-seal-in overflow-hidden rounded-full shadow-[0_0_40px_rgba(255,215,0,0.15)] border border-gold/20">
+              <Image
+                src="/zeta-psi-omicron-seal-3d.jpg"
+                alt="Zeta Psi Omicron 3D Seal"
+                width={160}
+                height={160}
+                className="h-full w-full object-cover"
+                priority
+              />
             </div>
             
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-light">
@@ -76,7 +64,7 @@ export default function Home() {
               Information System
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-parchment-muted sm:text-xl">
-              The official centralized database for the Zeta Psi Omicron Fraternity & Psi Zeta Omicron Sorority. 
+              The official centralized database for the Zeta Psi Omicron Fraternity. 
               Manage your membership, access exclusive announcements, and stay connected 
               nationwide.
             </p>
@@ -162,7 +150,9 @@ export default function Home() {
       <footer className="border-t border-onyx-line bg-onyx px-4 py-8">
         <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
-            <Image src="/zeta-psi-omicron-seal.png" alt="Seal" width={24} height={24} className="opacity-70" />
+            <div className="h-6 w-6 overflow-hidden rounded-full">
+              <Image src="/zeta-psi-omicron-seal-3d.jpg" alt="Seal" width={24} height={24} className="opacity-70 h-full w-full object-cover" />
+            </div>
             <p className="text-sm text-parchment-muted">
               &copy; {new Date().getFullYear()} Zeta Psi Omicron Fraternity. All rights reserved.
             </p>
