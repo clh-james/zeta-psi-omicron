@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Cinzel", serif;
+    --font-body: "Inter", sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+
+    /* Light Theme (Parchment background, Onyx text) */
+    --onyx: 43 27% 93%; /* #F3EFE6 */
+    --onyx-raised: 0 0% 100%; /* #FFFFFF */
+    --onyx-line: 43 14% 85%; 
+    --gold: 46 68% 47%; 
+    --gold-light: 46 72% 65%;
+    --gold-dim: 46 63% 33%;
+    --maroon: 343 73% 28%;
+    --maroon-light: 344 68% 36%;
+    --maroon-dim: 342 74% 17%;
+    --parchment: 240 8% 5%; /* #0B0B0D */
+    --parchment-ink: 240 8% 12%; 
+    --parchment-muted: 240 4% 46%;
+  }
+
+  .dark {
+    /* Dark Theme (Onyx background, Parchment text) */
+    --onyx: 240 8% 5%; /* #0B0B0D */
+    --onyx-raised: 240 8% 9%; /* #16161A */
+    --onyx-line: 240 5% 18%; /* #2B2B30 */
+    --gold: 46 68% 47%; 
+    --gold-light: 46 72% 65%;
+    --gold-dim: 46 63% 33%;
+    --maroon: 343 73% 28%;
+    --maroon-light: 344 68% 36%;
+    --maroon-dim: 342 74% 17%;
+    --parchment: 43 27% 93%; /* #F3EFE6 */
+    --parchment-ink: 38 10% 11%; /* #1E1B16 */
+    --parchment-muted: 43 14% 66%; /* #B8AE9B */
+  }
+
+  body {
+    @apply bg-onyx text-parchment font-body antialiased transition-colors duration-300;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-parchment;
+  }
+
+  /* Visible keyboard focus everywhere — never suppressed */
+  :focus-visible {
+    outline: 2px solid theme("colors.gold.DEFAULT");
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The signature element: a hairline "engraved" divider used at section
+     breaks, echoing the gold cord/braid on the fraternity's regalia. */
+  .engrave-divider {
+    @apply h-px w-full bg-engrave-line;
+  }
+
+  .seal-badge {
+    @apply relative flex items-center justify-center rounded-full border border-gold/50
+           bg-onyx-raised shadow-emboss;
+  }
+
+  .card-surface {
+    @apply rounded-card border border-onyx-line bg-onyx-raised shadow-emboss;
+  }
+}

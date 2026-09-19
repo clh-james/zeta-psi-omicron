@@ -1,0 +1,69 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Megaphone,
+  CalendarDays,
+  FileBarChart,
+  ScrollText,
+  Settings,
+  ShieldAlert,
+} from "lucide-react";
+
+const NAV = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, roles: "all" },
+  { href: "/dashboard/members", label: "Members", icon: Users, roles: "all" },
+  { href: "/dashboard/history", label: "History", icon: ScrollText, roles: "all" },
+  {
+    href: "/dashboard/chapters",
+    label: "Chapters & Regions",
+    icon: Building2,
+    roles: ["super_admin", "national_officer", "regional_officer"],
+  },
+  {
+    href: "/dashboard/announcements",
+    label: "Announcements",
+    icon: Megaphone,
+    roles: "all",
+  },
+  { href: "/dashboard/events", label: "Events", icon: CalendarDays, roles: "all" },
+  {
+    href: "/dashboard/reports",
+    label: "Reports",
+    icon: FileBarChart,
+    roles: ["super_admin", "national_officer", "regional_officer", "chapter_officer"],
+  },
+  { href: "/dashboard/settings", label: "Settings & Security", icon: ShieldAlert, roles: ["super_admin"] },
+] as const;
+
+export function SidebarNav({ role }: { role: string }) {
+  const pathname = usePathname();
+  const visibleNav = NAV.filter((item) => item.roles === "all" || item.roles.includes(role as any));
+
+  return (
+    <nav className="flex-1 space-y-1 px-3 py-4">
+      {visibleNav.map(({ href, label, icon: Icon }) => {
+        const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex items-center gap-3 rounded-card px-3 py-2 text-sm transition-colors ${
+              isActive
+                ? "bg-onyx text-gold"
+                : "text-parchment-muted hover:bg-onyx hover:text-gold"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
