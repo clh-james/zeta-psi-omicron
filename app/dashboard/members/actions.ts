@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendMembershipApprovedEmail, sendMembershipRejectedEmail } from "@/lib/email";
 
 export async function approveMember(memberId: string, chapterId: string) {
   const supabase = await createClient();
@@ -32,7 +33,7 @@ export async function approveMember(memberId: string, chapterId: string) {
 
   const { data: member } = await supabase
     .from("members")
-    .select("user_id")
+    .select("user_id, first_name, last_name, email")
     .eq("id", memberId)
     .single();
 
@@ -43,6 +44,14 @@ export async function approveMember(memberId: string, chapterId: string) {
       title: "Membership Approved",
       body: "Congratulations! Your membership registration has been approved by the National Council. You now have full access to the National MIS.",
     });
+
+    if (member.email) {
+      await sendMembershipApprovedEmail(
+        member.email, 
+        `${member.first_name} ${member.last_name}`, 
+        membershipNumber || ""
+      );
+    }
   }
 
   revalidatePath("/dashboard/members");
@@ -57,7 +66,7 @@ export async function rejectMember(memberId: string, reason: string) {
 
   const { data: member } = await supabase
     .from("members")
-    .select("user_id")
+    .select("user_id, first_name, last_name, email")
     .eq("id", memberId)
     .single();
 
@@ -81,6 +90,14 @@ export async function rejectMember(memberId: string, reason: string) {
       title: "Registration Update",
       body: `Your membership registration was rejected. Reason: ${reason}. Please contact your chapter officer for more details.`,
     });
+
+    if (member.email) {
+      await sendMembershipRejectedEmail(
+        member.email,
+        `${member.first_name} ${member.last_name}`,
+        reason
+      );
+    }
   }
 
   revalidatePath("/dashboard/members");

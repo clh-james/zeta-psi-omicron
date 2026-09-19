@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendAnnouncementBlastEmail } from "@/lib/email";
 
 export async function createAnnouncement(data: {
   title: string;
@@ -27,6 +28,23 @@ export async function createAnnouncement(data: {
   });
 
   if (error) return { ok: false, error: error.message };
+
+  // Fetch target emails
+  let emailQuery = supabase.from("members").select("email").eq("status", "active").not("email", "is", null);
+  
+  if (data.audience_scope === "regional" && data.region_id) {
+    emailQuery = emailQuery.eq("region_id", data.region_id);
+  } else if (data.audience_scope === "chapter" && data.chapter_id) {
+    emailQuery = emailQuery.eq("chapter_id", data.chapter_id);
+  }
+
+  const { data: members } = await emailQuery;
+  
+  if (members && members.length > 0) {
+    const emails = members.map((m: any) => m.email).filter(Boolean);
+    await sendAnnouncementBlastEmail(emails, data.title, data.body);
+  }
+
   revalidatePath("/dashboard/announcements");
   return { ok: true };
 }
