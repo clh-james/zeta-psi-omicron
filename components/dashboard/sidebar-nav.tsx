@@ -16,7 +16,9 @@ import {
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, roles: "all" },
-  { href: "/dashboard/members", label: "Members", icon: Users, roles: "all" },
+  { href: "/dashboard/biodata", label: "My Biodata", icon: FileBarChart, roles: "all" },
+  { href: "/dashboard/directory", label: "Directory", icon: Users, roles: "all" },
+  { href: "/dashboard/members", label: "Manage Members", icon: Users, roles: ["super_admin", "national_officer", "regional_officer", "chapter_officer"] },
   { href: "/dashboard/history", label: "History", icon: ScrollText, roles: "all" },
   {
     href: "/dashboard/chapters",
@@ -37,6 +39,7 @@ const NAV = [
     icon: FileBarChart,
     roles: ["super_admin", "national_officer", "regional_officer", "chapter_officer"],
   },
+  { href: "/dashboard/content", label: "Content CMS", icon: ScrollText, roles: ["super_admin", "national_officer"] },
   { href: "/dashboard/settings", label: "Settings & Security", icon: ShieldAlert, roles: ["super_admin"] },
 ] as const;
 
