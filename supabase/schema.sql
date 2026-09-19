@@ -366,6 +366,30 @@ $$;
 revoke execute on function update_fraternity_password(text) from public, anon, authenticated;
 
 -- ----------------------------------------------------------------------------
+-- SITE CONTENT (Dynamic About, History, etc.)
+-- ----------------------------------------------------------------------------
+
+create table site_content (
+  key text primary key,
+  value jsonb not null,
+  updated_by uuid references users(id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+
+-- Initial default content
+insert into site_content (key, value) values 
+('mission', '{"text": "To foster leadership, academic excellence, and an unbreakable bond of brotherhood."}'),
+('vision', '{"text": "To be the premier national fraternity shaping the next generation of leaders."}'),
+('core_values', '{"values": ["Leadership", "Brotherhood", "Excellence", "Service"]}'),
+('history_timeline', '{"events": [{"year": "1965", "title": "Founding", "description": "Established at the University of the Philippines Los Baños (UPLB)."}]}')
+on conflict (key) do nothing;
+
+alter table site_content enable row level security;
+create policy site_content_read on site_content for select using (true); -- Publicly readable
+create policy site_content_write on site_content for all
+  using (current_user_role() in ('super_admin','national_officer'));
+
+-- ----------------------------------------------------------------------------
 -- NOTIFICATIONS
 -- ----------------------------------------------------------------------------
 
