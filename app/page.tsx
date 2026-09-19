@@ -45,15 +45,27 @@ export default function Home() {
           <div className="absolute inset-0 bg-seal-radial opacity-40"></div>
           
           <div className="container relative mx-auto flex max-w-6xl flex-col items-center text-center">
-            <div className="mb-8 h-32 w-32 animate-seal-in overflow-hidden rounded-full shadow-emboss border-2 border-gold/40">
-              <Image
-                src="/zeta-psi-omicron-seal.png"
-                alt="Zeta Psi Omicron Fraternity Seal"
-                width={128}
-                height={128}
-                className="h-full w-full object-cover"
-                priority
-              />
+            <div className="mb-8 flex items-center justify-center gap-6 animate-seal-in">
+              <div className="h-32 w-32 overflow-hidden rounded-full shadow-emboss border-2 border-gold/40">
+                <Image
+                  src="/zeta-psi-omicron-seal.png"
+                  alt="Zeta Psi Omicron Fraternity Seal"
+                  width={128}
+                  height={128}
+                  className="h-full w-full object-cover bg-onyx-raised"
+                  priority
+                />
+              </div>
+              <div className="h-32 w-32 overflow-hidden rounded-full shadow-emboss border-2 border-gold/40">
+                <Image
+                  src="/psi-zeta-omicron-seal.png"
+                  alt="Psi Zeta Omicron Sorority Seal"
+                  width={128}
+                  height={128}
+                  className="h-full w-full object-cover bg-onyx-raised"
+                  priority
+                />
+              </div>
             </div>
             
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-light">
@@ -64,9 +76,9 @@ export default function Home() {
               Information System
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-parchment-muted sm:text-xl">
-              The official centralized database for the Zeta Psi Omicron Fraternity. 
+              The official centralized database for the Zeta Psi Omicron Fraternity & Psi Zeta Omicron Sorority. 
               Manage your membership, access exclusive announcements, and stay connected 
-              with brothers nationwide.
+              nationwide.
             </p>
             
             <div className="flex flex-col gap-4 sm:flex-row">
