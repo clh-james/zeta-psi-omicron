@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
@@ -42,7 +43,14 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-onyx px-4">
+    <div className="flex min-h-screen items-center justify-center bg-onyx px-4 relative">
+      <Link href="/" className="absolute top-6 left-6 flex items-center gap-2 text-sm font-medium text-parchment-muted hover:text-gold transition-colors group z-10">
+        <div className="bg-onyx-raised border border-onyx-line rounded-full p-2 group-hover:border-gold/50 transition-colors shadow-emboss">
+          <Home className="w-4 h-4" />
+        </div>
+        <span className="hidden sm:inline tracking-wider uppercase text-xs">Home</span>
+      </Link>
+      
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div className="h-16 w-16 overflow-hidden rounded-full shadow-emboss">
