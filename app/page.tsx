@@ -12,7 +12,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 overflow-hidden rounded-full shadow-emboss">
               <Image
-                src="/zeta-psi-omicron-seal-3d.jpg"
+                src="/zeta-psi-omicron-seal.png"
                 alt="Zeta Psi Omicron 3D Seal"
                 width={40}
                 height={40}
@@ -47,7 +47,7 @@ export default function Home() {
           <div className="container relative mx-auto flex max-w-6xl flex-col items-center text-center">
             <div className="mb-8 h-40 w-40 animate-seal-in overflow-hidden rounded-full shadow-[0_0_40px_rgba(255,215,0,0.15)] border border-gold/20">
               <Image
-                src="/zeta-psi-omicron-seal-3d.jpg"
+                src="/zeta-psi-omicron-seal.png"
                 alt="Zeta Psi Omicron 3D Seal"
                 width={160}
                 height={160}
@@ -151,7 +151,7 @@ export default function Home() {
         <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 overflow-hidden rounded-full">
-              <Image src="/zeta-psi-omicron-seal-3d.jpg" alt="Seal" width={24} height={24} className="opacity-70 h-full w-full object-cover" />
+              <Image src="/zeta-psi-omicron-seal.png" alt="Seal" width={24} height={24} className="opacity-70 h-full w-full object-cover" />
             </div>
             <p className="text-sm text-parchment-muted">
               &copy; {new Date().getFullYear()} Zeta Psi Omicron Fraternity. All rights reserved.
