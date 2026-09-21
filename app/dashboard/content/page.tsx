@@ -33,8 +33,30 @@ export default function ContentManagementPage() {
 
   const handleSave = async (key: string, value: any) => {
     setSaving(true);
-    await supabase.from("site_content").upsert({ key, value });
-    alert("Content updated successfully");
+    const { error } = await supabase.from("site_content").upsert({ key, value });
+    if (error) {
+      alert("Error saving content: " + error.message);
+    } else {
+      alert("Content updated successfully");
+    }
+    setSaving(false);
+  };
+
+  const handleInitialize = async () => {
+    setSaving(true);
+    const defaults = [
+      { key: 'mission', value: { text: "To foster leadership, academic excellence, and an unbreakable bond of brotherhood." } },
+      { key: 'vision', value: { text: "To be the premier national fraternity shaping the next generation of leaders." } },
+      { key: 'core_values', value: { values: ["Leadership", "Brotherhood", "Excellence", "Service"] } },
+      { key: 'history_timeline', value: { events: [{ year: "1965", title: "Founding", description: "Established at the University of the Philippines Los Baños (UPLB)." }] } }
+    ];
+    
+    for (const item of defaults) {
+      await supabase.from("site_content").upsert(item);
+    }
+    
+    const { data } = await supabase.from("site_content").select("*").order("key");
+    if (data) setContent(data);
     setSaving(false);
   };
 
@@ -51,6 +73,15 @@ export default function ContentManagementPage() {
         <AlertTriangle className="h-5 w-5 text-maroon" />
         <p className="text-sm">Content must be valid JSON matching the website's expected structure.</p>
       </div>
+      
+      {content.length === 0 && (
+        <div className="text-center py-12 bg-onyx-raised border border-onyx-line rounded-lg">
+          <p className="text-parchment-muted mb-4">No content found in the database.</p>
+          <Button variant="gold" onClick={handleInitialize} disabled={saving}>
+            Initialize Default Content
+          </Button>
+        </div>
+      )}
 
       {content.map((item, idx) => (
         <Card key={item.key} className="bg-onyx border-onyx-line">
