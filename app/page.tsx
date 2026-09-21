@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Users, ScrollText, ChevronRight, Menu, MapPin, Building2, Calendar, Newspaper, ArrowRight } from "lucide-react";
+import { LandingNav } from "@/components/landing-nav";
 
 export default function Home() {
   return (
@@ -24,14 +25,7 @@ export default function Home() {
             </span>
           </div>
           
-          <nav className="hidden items-center gap-8 md:flex text-sm font-medium tracking-wide">
-            <Link href="/" className="text-gold border-b border-gold pb-1">Home</Link>
-            <Link href="#about" className="text-parchment-muted hover:text-gold transition-colors">About</Link>
-            <Link href="#history" className="text-parchment-muted hover:text-gold transition-colors">History</Link>
-            <Link href="#chapters" className="text-parchment-muted hover:text-gold transition-colors">Chapters</Link>
-            <Link href="/dashboard/directory" className="text-parchment-muted hover:text-gold transition-colors">Members</Link>
-            <Link href="#news" className="text-parchment-muted hover:text-gold transition-colors">News</Link>
-          </nav>
+          <LandingNav />
 
           <div className="flex items-center gap-4">
             <Link href="/register" className="hidden sm:block">
