@@ -15,16 +15,21 @@ import {
   CreditCard,
   Briefcase,
   MessageSquare,
+  FolderArchive,
+  BadgeCheck,
 } from "lucide-react";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, roles: "all" },
   { href: "/dashboard/biodata", label: "My Biodata", icon: FileBarChart, roles: "all" },
+  { href: "/dashboard/id-card", label: "Digital ID Card", icon: BadgeCheck, roles: "all" },
   { href: "/dashboard/directory", label: "Directory", icon: Users, roles: "all" },
   { href: "/dashboard/members", label: "Manage Members", icon: Users, roles: ["super_admin", "national_officer", "regional_officer", "chapter_officer"] },
   { href: "/dashboard/history", label: "History", icon: ScrollText, roles: "all" },
+  { href: "/dashboard/archives", label: "The Archives", icon: FolderArchive, roles: "all" },
   { href: "/dashboard/dues", label: "Dues & Payments", icon: CreditCard, roles: "all" },
   { href: "/dashboard/career", label: "Career & Mentorship", icon: Briefcase, roles: "all" },
+  { href: "/dashboard/events", label: "Events & Calendar", icon: CalendarDays, roles: "all" },
   { href: "/dashboard/chat", label: "Live Chat", icon: MessageSquare, roles: "all" },
   {
     href: "/dashboard/chapters",
@@ -38,7 +43,6 @@ const NAV = [
     icon: Megaphone,
     roles: "all",
   },
-  { href: "/dashboard/events", label: "Events", icon: CalendarDays, roles: "all" },
   {
     href: "/dashboard/reports",
     label: "Reports",

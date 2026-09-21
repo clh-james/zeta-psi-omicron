@@ -1,305 +1,168 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Plus, Trash2, Calendar, MapPin, Globe, Map as MapIcon, Building2, Clock } from "lucide-react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createEvent, deleteEvent, rsvpEvent } from "@/app/dashboard/events/actions";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CalendarDays, MapPin, Users, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
+import { createEvent, submitRSVP } from "@/app/dashboard/events/actions";
 
-type Region = { id: string; name: string };
-type Chapter = { id: string; name: string };
-type FraternityEvent = {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  starts_at: string;
-  ends_at: string | null;
-  audience_scope: string;
-  region_name?: string | null;
-  chapter_name?: string | null;
-  author_name: string;
-};
+export function EventsManager({ events, currentMemberId, role }: { events: any[], currentMemberId: string, role: string }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-export function EventsManager({
-  events,
-  regions,
-  chapters,
-  canManage,
-  currentMemberId,
-  userRsvps = {},
-}: {
-  events: FraternityEvent[];
-  regions: Region[];
-  chapters: Chapter[];
-  canManage: boolean;
-  currentMemberId?: string | null;
-  userRsvps?: Record<string, string>;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const [isCreating, setIsCreating] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
-  const [scope, setScope] = useState("national");
-  const [regionId, setRegionId] = useState("");
-  const [chapterId, setChapterId] = useState("");
+  const canCreateEvent = ["super_admin", "national_officer", "regional_officer", "chapter_officer"].includes(role);
 
-  async function handleCreate(e: React.FormEvent) {
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!title || !startsAt || !location) return;
-    
-    startTransition(async () => {
-      const res = await createEvent({
-        title,
-        description,
-        location,
-        starts_at: new Date(startsAt).toISOString(),
-        ends_at: endsAt ? new Date(endsAt).toISOString() : "",
-        audience_scope: scope,
-        region_id: scope === "regional" ? regionId : null,
-        chapter_id: scope === "chapter" ? chapterId : null,
-      });
-      if (res.ok) {
-        setIsCreating(false);
-        setTitle("");
-        setDescription("");
-        setLocation("");
-        setStartsAt("");
-        setEndsAt("");
-      } else {
-        alert(res.error);
-      }
-    });
-  }
+    setIsSubmitting(true);
+    try {
+      await createEvent(new FormData(e.currentTarget));
+      alert("Event created successfully!");
+      setDialogOpen(false);
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    }
+    setIsSubmitting(false);
+  };
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this event?")) return;
-    startTransition(async () => {
-      await deleteEvent(id);
-    });
-  }
-
-  function handleRsvp(eventId: string, status: string) {
-    startTransition(async () => {
-      await rsvpEvent(eventId, status);
-    });
-  }
+  const handleRSVP = async (eventId: string, status: 'attending' | 'maybe' | 'declined') => {
+    if (!currentMemberId) {
+      alert("You must have a member profile to RSVP to events.");
+      return;
+    }
+    try {
+      await submitRSVP(eventId, status);
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {canManage && !isCreating && (
-        <div className="flex justify-end">
-          <Button onClick={() => setIsCreating(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Schedule Event
-          </Button>
-        </div>
-      )}
-
-      {isCreating && (
-        <form onSubmit={handleCreate} className="card-surface space-y-4 p-6 border border-gold/40">
-          <h2 className="font-display text-lg text-gold flex items-center gap-2">
-            <Calendar className="h-5 w-5" /> Schedule New Event
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4 md:col-span-2">
-              <Input 
-                placeholder="Event Title" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-                required
-              />
-              <Textarea 
-                placeholder="Event Description..." 
-                value={description} 
-                onChange={(e) => setDescription(e.target.value)} 
-                className="min-h-[100px]"
-              />
-              <Input 
-                placeholder="Location (e.g. Grand Hotel Manila or Zoom Link)" 
-                value={location} 
-                onChange={(e) => setLocation(e.target.value)} 
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs uppercase tracking-wide text-parchment-muted block">Starts At</label>
-              <Input 
-                type="datetime-local"
-                value={startsAt} 
-                onChange={(e) => setStartsAt(e.target.value)} 
-                required
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label className="text-xs uppercase tracking-wide text-parchment-muted block">Ends At (Optional)</label>
-              <Input 
-                type="datetime-local"
-                value={endsAt} 
-                onChange={(e) => setEndsAt(e.target.value)} 
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 pt-2">
-            <div className="flex-1">
-              <label className="text-xs uppercase tracking-wide text-parchment-muted mb-1 block">Audience Scope</label>
-              <select
-                className="w-full rounded-card border border-onyx-line bg-onyx px-3 py-2 text-sm text-parchment focus-visible:outline-none focus-visible:border-gold"
-                value={scope}
-                onChange={(e) => setScope(e.target.value)}
-              >
-                <option value="national">National (All Members)</option>
-                <option value="regional">Regional</option>
-                <option value="chapter">Chapter</option>
-              </select>
-            </div>
-
-            {scope === "regional" && (
-              <div className="flex-1">
-                <label className="text-xs uppercase tracking-wide text-parchment-muted mb-1 block">Select Region</label>
-                <select
-                  className="w-full rounded-card border border-onyx-line bg-onyx px-3 py-2 text-sm text-parchment focus-visible:outline-none focus-visible:border-gold"
-                  value={regionId}
-                  onChange={(e) => setRegionId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Region...</option>
-                  {regions.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {scope === "chapter" && (
-              <div className="flex-1">
-                <label className="text-xs uppercase tracking-wide text-parchment-muted mb-1 block">Select Chapter</label>
-                <select
-                  className="w-full rounded-card border border-onyx-line bg-onyx px-3 py-2 text-sm text-parchment focus-visible:outline-none focus-visible:border-gold"
-                  value={chapterId}
-                  onChange={(e) => setChapterId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Chapter...</option>
-                  {chapters.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="ghost" onClick={() => setIsCreating(false)} disabled={isPending}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="gold" disabled={isPending || !title || !startsAt || !location}>
-              Schedule Event
-            </Button>
-          </div>
-        </form>
-      )}
-
-      <div className="space-y-4">
-        {events.length === 0 ? (
-          <div className="card-surface p-12 text-center text-parchment-muted">
-            <p>No upcoming events scheduled.</p>
-          </div>
-        ) : (
-          events.map((e) => (
-            <div key={e.id} className="card-surface relative overflow-hidden p-6 transition-colors hover:bg-onyx-raised/80">
-              <div className="flex items-start justify-between gap-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-parchment-muted">Upcoming fraternity events and gatherings.</p>
+        
+        {canCreateEvent && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="gold"><CalendarDays className="w-4 h-4 mr-2" /> Schedule Event</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-onyx-raised border-onyx-line text-parchment max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Schedule a New Event</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="font-display text-xl text-gold">{e.title}</h3>
-                    <Badge variant={e.audience_scope === "national" ? "default" : "secondary"}>
-                      {e.audience_scope === "national" && <Globe className="mr-1 h-3 w-3 inline" />}
-                      {e.audience_scope === "regional" && <MapIcon className="mr-1 h-3 w-3 inline" />}
-                      {e.audience_scope === "chapter" && <Building2 className="mr-1 h-3 w-3 inline" />}
-                      {e.audience_scope.toUpperCase()}
-                      {e.region_name ? ` - ${e.region_name}` : ""}
-                      {e.chapter_name ? ` - ${e.chapter_name}` : ""}
-                    </Badge>
+                  <Label>Event Title</Label>
+                  <Input name="title" required className="bg-onyx border-onyx-line" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea name="description" required className="bg-onyx border-onyx-line h-24" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Date & Time</Label>
+                    <Input type="datetime-local" name="event_date" required className="bg-onyx border-onyx-line" />
                   </div>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-parchment">
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-parchment-muted" />
-                      {new Date(e.starts_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                      {e.ends_at && ` - ${new Date(e.ends_at).toLocaleTimeString([], { timeStyle: 'short' })}`}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4 text-parchment-muted" />
-                      {e.location}
-                    </span>
+                  <div className="space-y-2">
+                    <Label>Event Type</Label>
+                    <select name="type" required className="w-full bg-onyx border border-onyx-line text-parchment p-2 rounded text-sm outline-none">
+                      <option value="national">National</option>
+                      <option value="regional">Regional</option>
+                      <option value="chapter">Chapter</option>
+                    </select>
                   </div>
                 </div>
-
-                {canManage && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/dashboard/events/${e.id}/attendance`}>
-                      <Button size="sm" variant="outline" className="border-gold/30 text-gold hover:bg-gold/10">
-                        Track Attendance
-                      </Button>
-                    </Link>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(e.id)}
-                      className="text-red-400 hover:bg-red-500/10 hover:text-red-400"
-                      disabled={isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              {e.description && (
-                <div className="mt-4 whitespace-pre-wrap text-sm text-parchment-muted/90 leading-relaxed border-t border-onyx-line pt-4">
-                  {e.description}
+                <div className="space-y-2">
+                  <Label>Location / Link</Label>
+                  <Input name="location" required className="bg-onyx border-onyx-line" placeholder="Physical address or Zoom link" />
                 </div>
-              )}
-
-              {currentMemberId && (
-                <div className="mt-6 pt-4 border-t border-onyx-line flex items-center justify-between">
-                  <div className="text-sm text-parchment-muted">
-                    Will you be attending this event?
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant={userRsvps[e.id] === 'present' ? 'gold' : 'outline'}
-                      onClick={() => handleRsvp(e.id, 'present')}
-                      disabled={isPending}
-                      className={userRsvps[e.id] === 'present' ? 'bg-green-600 hover:bg-green-700 text-white' : 'border-green-600/30 text-green-500 hover:bg-green-500/10'}
-                    >
-                      Attending
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant={userRsvps[e.id] === 'absent' ? 'gold' : 'outline'}
-                      onClick={() => handleRsvp(e.id, 'absent')}
-                      disabled={isPending}
-                      className={userRsvps[e.id] === 'absent' ? '' : 'border-red-500/30 text-red-500 hover:bg-red-500/10'}
-                    >
-                      Not Attending
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
+                <Button type="submit" variant="gold" disabled={isSubmitting} className="w-full">
+                  Create Event
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         )}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {events.length === 0 && (
+          <p className="text-parchment-muted col-span-full text-center py-10">No upcoming events found.</p>
+        )}
+        {events.map((event) => {
+          const myRSVP = event.event_rsvps.find((r: any) => r.member_id === currentMemberId)?.status;
+          
+          const attendingCount = event.event_rsvps.filter((r: any) => r.status === 'attending').length;
+          
+          return (
+            <Card key={event.id} className="border-onyx-line bg-onyx-raised flex flex-col">
+              <CardHeader className="pb-3 border-b border-onyx-line">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gold bg-gold/10 px-2 py-0.5 rounded">
+                    {event.type}
+                  </span>
+                  <span className="text-xs text-parchment-muted flex items-center gap-1">
+                    <Users className="w-3 h-3" /> {attendingCount} attending
+                  </span>
+                </div>
+                <CardTitle className="text-parchment text-lg">{event.title}</CardTitle>
+                <CardDescription className="text-parchment-muted/80 text-xs mt-1">
+                  Organized by {event.organizer?.first_name} {event.organizer?.last_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="py-4 flex-1">
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-parchment">
+                    <CalendarDays className="w-4 h-4 text-gold" />
+                    {new Date(event.event_date).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-parchment">
+                    <MapPin className="w-4 h-4 text-gold" />
+                    <span className="truncate">{event.location}</span>
+                  </div>
+                </div>
+                <p className="text-sm text-parchment-muted line-clamp-3">{event.description}</p>
+              </CardContent>
+              <CardFooter className="pt-4 border-t border-onyx-line flex-col gap-3">
+                <div className="w-full">
+                  <span className="text-xs uppercase tracking-widest text-parchment-muted block mb-2">Your RSVP</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button 
+                      variant={myRSVP === 'attending' ? 'gold' : 'outline'} 
+                      size="sm" 
+                      onClick={() => handleRSVP(event.id, 'attending')}
+                      className={`h-8 ${myRSVP !== 'attending' ? 'border-onyx-line hover:text-gold text-parchment-muted' : ''}`}
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1" /> Going
+                    </Button>
+                    <Button 
+                      variant={myRSVP === 'maybe' ? 'secondary' : 'outline'} 
+                      size="sm" 
+                      onClick={() => handleRSVP(event.id, 'maybe')}
+                      className={`h-8 ${myRSVP !== 'maybe' ? 'border-onyx-line hover:text-parchment text-parchment-muted' : 'bg-onyx hover:bg-onyx text-parchment'}`}
+                    >
+                      <HelpCircle className="w-3 h-3 mr-1" /> Maybe
+                    </Button>
+                    <Button 
+                      variant={myRSVP === 'declined' ? 'destructive' : 'outline'} 
+                      size="sm" 
+                      onClick={() => handleRSVP(event.id, 'declined')}
+                      className={`h-8 ${myRSVP !== 'declined' ? 'border-onyx-line hover:text-maroon text-parchment-muted' : 'bg-maroon/20 text-maroon hover:bg-maroon/20 hover:text-maroon border-maroon'}`}
+                    >
+                      <XCircle className="w-3 h-3 mr-1" /> Can't Go
+                    </Button>
+                  </div>
+                </div>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

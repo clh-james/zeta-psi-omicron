@@ -1,82 +1,74 @@
 import { createClient } from "@/lib/supabase/server";
 import { EventsManager } from "@/components/dashboard/events-manager";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  let canManage = false;
-  let currentMemberId = null;
-  let userRsvps: Record<string, string> = {};
+  if (!user) {
+    redirect("/login");
+  }
 
-  if (userData?.user) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", userData.user.id)
-      .single();
-    canManage = ["super_admin", "national_officer", "regional_officer", "chapter_officer"].includes(profile?.role || "");
+  // Get current member
+  const { data: member } = await supabase
+    .from("members")
+    .select(`
+      id,
+      chapter_id,
+      chapter:chapters(region),
+      user:users(role)
+    `)
+    .eq("user_id", user.id)
+    .single();
 
-    const { data: member } = await supabase
-      .from("members")
-      .select("id")
-      .eq("user_id", userData.user.id)
-      .single();
-    
-    if (member) {
-      currentMemberId = member.id;
-      const { data: attendance } = await supabase
-        .from("event_attendance")
-        .select("event_id, status")
-        .eq("member_id", member.id);
-      
-      attendance?.forEach(record => {
-        userRsvps[record.event_id] = record.status;
-      });
+  let role = 'member';
+  let memberId = '';
+
+  if (member) {
+    const userRecord = Array.isArray(member.user) ? member.user[0] : member.user;
+    role = userRecord?.role || 'member';
+    memberId = member.id;
+  } else {
+    // Fallback: Check if they are just an admin without a member profile
+    const { data: userProfile } = await supabase.from("users").select("role").eq("id", user.id).single();
+    if (userProfile) {
+      role = userProfile.role;
+    } else {
+      return <div className="p-8 text-parchment">Profile not found.</div>;
     }
   }
 
-  // Fetch upcoming events
-  const { data: rawEvents } = await supabase
+  // Fetch events based on visibility logic.
+  // We'll fetch all events for now, and filter them here based on the member's details.
+  // (In a full production setup, RLS policies would handle this automatically if configured with specific target_chapter matching, but we fetch all they have access to read via RLS).
+  const { data: events } = await supabase
     .from("events")
     .select(`
-      id, title, description, location, starts_at, ends_at, audience_scope,
-      regions(name), chapters(name), users(username)
+      *,
+      organizer:members (first_name, last_name),
+      event_rsvps (*)
     `)
-    .gte("starts_at", new Date().toISOString())
-    .order("starts_at", { ascending: true });
+    .order("event_date", { ascending: true });
 
-  const events = (rawEvents || []).map((e: any) => ({
-    id: e.id,
-    title: e.title,
-    description: e.description,
-    location: e.location,
-    starts_at: e.starts_at,
-    ends_at: e.ends_at,
-    audience_scope: e.audience_scope,
-    region_name: e.regions?.name,
-    chapter_name: e.chapters?.name,
-    author_name: e.users?.username || "Admin",
-  }));
-
-  // Fetch reference data for the form
-  const { data: regions } = await supabase.from("regions").select("id, name").order("name");
-  const { data: chapters } = await supabase.from("chapters").select("id, name").order("name");
+  // Filter out past events
+  const upcomingEvents = (events || []).filter(e => new Date(e.event_date) >= new Date());
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-xl text-gold">Events</h1>
-        <p className="text-sm text-parchment-muted">Schedule and manage fraternity events.</p>
+        <h1 className="font-display text-2xl text-gold">Events & Calendar</h1>
+        <p className="text-sm text-parchment-muted">
+          Discover and RSVP to upcoming national, regional, and chapter events.
+        </p>
       </div>
-      
+
       <EventsManager 
-        events={events} 
-        regions={regions || []} 
-        chapters={chapters || []} 
-        canManage={canManage}
-        currentMemberId={currentMemberId}
-        userRsvps={userRsvps}
+        events={upcomingEvents} 
+        currentMemberId={memberId} 
+        role={role}
       />
     </div>
   );

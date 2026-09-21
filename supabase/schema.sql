@@ -335,6 +335,57 @@ create table mentorship_offers (
 );
 
 -- ----------------------------------------------------------------------------
+-- EVENTS & RSVPS
+-- ----------------------------------------------------------------------------
+
+create type event_type as enum ('national', 'regional', 'chapter');
+create type rsvp_status as enum ('attending', 'maybe', 'declined');
+
+create table events (
+  id uuid primary key default uuid_generate_v4(),
+  title text not null,
+  description text not null,
+  event_date timestamptz not null,
+  location text not null,
+  organizer_id uuid not null references members(id) on delete cascade,
+  type event_type not null default 'national',
+  target_chapter_id uuid references chapters(id) on delete cascade,
+  target_region text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table event_rsvps (
+  id uuid primary key default uuid_generate_v4(),
+  event_id uuid not null references events(id) on delete cascade,
+  member_id uuid not null references members(id) on delete cascade,
+  status rsvp_status not null default 'attending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(event_id, member_id)
+);
+
+-- ----------------------------------------------------------------------------
+-- ARCHIVES (Document Repository)
+-- ----------------------------------------------------------------------------
+
+create type document_category as enum ('constitution', 'minutes', 'forms', 'other');
+create type document_visibility as enum ('all_members', 'officers_only');
+
+create table archives (
+  id uuid primary key default uuid_generate_v4(),
+  title text not null,
+  description text,
+  file_url text not null,
+  file_type text not null,
+  category document_category not null default 'other',
+  visibility document_visibility not null default 'all_members',
+  uploaded_by uuid references members(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ----------------------------------------------------------------------------
 -- LIVE CHAT
 -- ----------------------------------------------------------------------------
 
@@ -726,3 +777,47 @@ create policy messages_insert on messages for insert
   
 -- Enable Supabase Realtime for the messages table
 alter publication supabase_realtime add table messages;
+
+-- Events RLS
+alter table events enable row level security;
+create policy events_read on events for select using (
+  auth.role() = 'authenticated'
+);
+create policy events_insert on events for insert with check (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+create policy events_update on events for update using (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+create policy events_delete on events for delete using (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+
+-- Event RSVPs RLS
+alter table event_rsvps enable row level security;
+create policy event_rsvps_read on event_rsvps for select using (auth.role() = 'authenticated');
+create policy event_rsvps_insert on event_rsvps for insert with check (
+  exists (select 1 from members where members.id = event_rsvps.member_id and members.user_id = auth.uid())
+);
+create policy event_rsvps_update on event_rsvps for update using (
+  exists (select 1 from members where members.id = event_rsvps.member_id and members.user_id = auth.uid())
+);
+create policy event_rsvps_delete on event_rsvps for delete using (
+  exists (select 1 from members where members.id = event_rsvps.member_id and members.user_id = auth.uid())
+);
+
+-- Archives RLS
+alter table archives enable row level security;
+create policy archives_read on archives for select using (
+  visibility = 'all_members' or 
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+create policy archives_insert on archives for insert with check (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+create policy archives_update on archives for update using (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
+create policy archives_delete on archives for delete using (
+  current_user_role() in ('super_admin', 'national_officer', 'regional_officer', 'chapter_officer')
+);
