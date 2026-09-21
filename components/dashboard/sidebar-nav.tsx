@@ -12,6 +12,9 @@ import {
   ScrollText,
   Settings,
   ShieldAlert,
+  CreditCard,
+  Briefcase,
+  MessageSquare,
 } from "lucide-react";
 
 const NAV = [
@@ -20,6 +23,9 @@ const NAV = [
   { href: "/dashboard/directory", label: "Directory", icon: Users, roles: "all" },
   { href: "/dashboard/members", label: "Manage Members", icon: Users, roles: ["super_admin", "national_officer", "regional_officer", "chapter_officer"] },
   { href: "/dashboard/history", label: "History", icon: ScrollText, roles: "all" },
+  { href: "/dashboard/dues", label: "Dues & Payments", icon: CreditCard, roles: "all" },
+  { href: "/dashboard/career", label: "Career & Mentorship", icon: Briefcase, roles: "all" },
+  { href: "/dashboard/chat", label: "Live Chat", icon: MessageSquare, roles: "all" },
   {
     href: "/dashboard/chapters",
     label: "Chapters & Regions",

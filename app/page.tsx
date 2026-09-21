@@ -156,7 +156,7 @@ export default function Home() {
                 <p className="text-parchment-muted text-lg mb-8 leading-relaxed">
                   Discover Zeta Psi Omicron chapters across the nation. View chapter leadership, location details, and aggregate member counts.
                 </p>
-                <Link href="/chapters">
+                <Link href="/dashboard/chapters">
                   <Button variant="outline" className="border-gold text-gold hover:bg-gold hover:text-onyx uppercase tracking-widest text-sm h-12 px-8">
                     View Chapter Registry
                   </Button>
@@ -321,8 +321,9 @@ export default function Home() {
                 <li><Link href="/" className="hover:text-gold transition-colors">Home</Link></li>
                 <li><Link href="#about" className="hover:text-gold transition-colors">About Us</Link></li>
                 <li><Link href="#history" className="hover:text-gold transition-colors">Fraternity History</Link></li>
-                <li><Link href="/chapters" className="hover:text-gold transition-colors">Chapter Registry</Link></li>
-                <li><Link href="/news" className="hover:text-gold transition-colors">News & Events</Link></li>
+                <li><Link href="#chapters" className="hover:text-gold transition-colors">Chapter Registry</Link></li>
+                <li><Link href="/dashboard/directory" className="hover:text-gold transition-colors">Members Directory</Link></li>
+                <li><Link href="#news" className="hover:text-gold transition-colors">News & Events</Link></li>
               </ul>
             </div>
 

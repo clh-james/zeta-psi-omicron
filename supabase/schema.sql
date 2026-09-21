@@ -273,6 +273,77 @@ create table event_attendance (
   created_at timestamptz not null default now(),
   primary key (event_id, member_id)
 );
+-- ----------------------------------------------------------------------------
+-- DUES & PAYMENTS
+-- ----------------------------------------------------------------------------
+
+create table dues (
+  id uuid primary key default uuid_generate_v4(),
+  title text not null,                     -- e.g., "National Annual Dues 2026"
+  description text,
+  amount numeric(10,2) not null,
+  due_date date not null,
+  audience_scope text not null default 'national' check (audience_scope in ('national','regional','chapter')),
+  region_id uuid references regions(id) on delete cascade,
+  chapter_id uuid references chapters(id) on delete cascade,
+  created_by uuid references users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create table payments (
+  id uuid primary key default uuid_generate_v4(),
+  due_id uuid not null references dues(id) on delete cascade,
+  member_id uuid not null references members(id) on delete cascade,
+  amount numeric(10,2) not null,
+  status text not null default 'pending' check (status in ('pending', 'verified', 'rejected')),
+  proof_file_url text,                     -- URL/path to uploaded receipt in storage
+  reference_number text,                   -- Bank/GCash ref number
+  verified_by uuid references users(id) on delete set null,
+  verified_at timestamptz,
+  notes text,                              -- Reason for rejection, etc.
+  created_at timestamptz not null default now(),
+  unique(due_id, member_id)
+);
+-- ----------------------------------------------------------------------------
+-- CAREER & MENTORSHIP
+-- ----------------------------------------------------------------------------
+
+create table job_postings (
+  id uuid primary key default uuid_generate_v4(),
+  poster_id uuid not null references members(id) on delete cascade,
+  title text not null,
+  company text not null,
+  location text not null,
+  job_type text not null,                  -- e.g., 'Full-time', 'Part-time', 'Internship'
+  description text not null,
+  apply_url text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table mentorship_offers (
+  id uuid primary key default uuid_generate_v4(),
+  member_id uuid not null references members(id) on delete cascade,
+  expertise text not null,                 -- e.g., 'Software Engineering, Startups'
+  availability text not null,              -- e.g., '2 hours/week'
+  bio text not null,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(member_id)
+);
+
+-- ----------------------------------------------------------------------------
+-- LIVE CHAT
+-- ----------------------------------------------------------------------------
+
+create table messages (
+  id uuid primary key default uuid_generate_v4(),
+  sender_id uuid not null references members(id) on delete cascade,
+  content text not null,
+  created_at timestamptz not null default now()
+);
 
 -- ----------------------------------------------------------------------------
 -- LOGS
@@ -595,3 +666,63 @@ create policy notifications_own on notifications for select
   using (user_id = auth.uid());
 create policy notifications_update_own on notifications for update
   using (user_id = auth.uid());
+
+-- Dues: read by all authenticated, write by officers
+alter table dues enable row level security;
+create policy dues_read on dues for select using (auth.role() = 'authenticated');
+create policy dues_write on dues for all
+  using (current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer'));
+
+-- Payments: users see/insert their own, admins see/update all
+alter table payments enable row level security;
+create policy payments_read on payments for select
+  using (
+    exists (select 1 from members where members.id = payments.member_id and members.user_id = auth.uid())
+    or current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer')
+  );
+create policy payments_insert on payments for insert
+  with check (
+    exists (select 1 from members where members.id = payments.member_id and members.user_id = auth.uid())
+  );
+create policy payments_update on payments for update
+  using (current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer'));
+
+-- Career & Mentorship: Read by all authenticated members, write by the poster/mentor
+alter table job_postings enable row level security;
+create policy job_postings_read on job_postings for select using (auth.role() = 'authenticated');
+create policy job_postings_insert on job_postings for insert
+  with check (exists (select 1 from members where members.id = job_postings.poster_id and members.user_id = auth.uid()));
+create policy job_postings_update on job_postings for update
+  using (
+    exists (select 1 from members where members.id = job_postings.poster_id and members.user_id = auth.uid())
+    or current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer')
+  );
+create policy job_postings_delete on job_postings for delete
+  using (
+    exists (select 1 from members where members.id = job_postings.poster_id and members.user_id = auth.uid())
+    or current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer')
+  );
+
+alter table mentorship_offers enable row level security;
+create policy mentorship_offers_read on mentorship_offers for select using (auth.role() = 'authenticated');
+create policy mentorship_offers_insert on mentorship_offers for insert
+  with check (exists (select 1 from members where members.id = mentorship_offers.member_id and members.user_id = auth.uid()));
+create policy mentorship_offers_update on mentorship_offers for update
+  using (
+    exists (select 1 from members where members.id = mentorship_offers.member_id and members.user_id = auth.uid())
+    or current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer')
+  );
+create policy mentorship_offers_delete on mentorship_offers for delete
+  using (
+    exists (select 1 from members where members.id = mentorship_offers.member_id and members.user_id = auth.uid())
+    or current_user_role() in ('super_admin','national_officer','regional_officer','chapter_officer')
+  );
+
+-- Live Chat: Read by all authenticated members, write by the sender
+alter table messages enable row level security;
+create policy messages_read on messages for select using (auth.role() = 'authenticated');
+create policy messages_insert on messages for insert
+  with check (exists (select 1 from members where members.id = messages.sender_id and members.user_id = auth.uid()));
+  
+-- Enable Supabase Realtime for the messages table
+alter publication supabase_realtime add table messages;
