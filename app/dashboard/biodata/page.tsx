@@ -45,14 +45,43 @@ export default function BiodataPage() {
     if (user) {
       const payload = {
         ...memberData,
-        registration_status: isSubmit ? "pending" : memberData.registration_status || "draft",
-        status: isSubmit && memberData.status === "inactive" ? "inactive" : memberData.status,
+        user_id: user.id,
       };
-      await supabase.from("members").update(payload).eq("user_id", user.id);
-      if (isSubmit) {
-        alert("Biodata submitted for verification!");
+      
+      // Sanitize empty strings for date/numeric fields to prevent DB errors
+      if (payload.birth_date === "") payload.birth_date = null;
+      if (payload.initiation_date === "") payload.initiation_date = null;
+      if (payload.charter_date === "") payload.charter_date = null;
+      
+      // PostgreSQL enum for registration_status only allows 'pending', 'approved', 'rejected'
+      if (isSubmit || !payload.registration_status) {
+        payload.registration_status = "pending";
+      }
+
+      let error;
+      if (payload.id) {
+        const res = await supabase.from("members").update(payload).eq("id", payload.id);
+        error = res.error;
       } else {
-        alert("Draft saved successfully.");
+        const res = await supabase.from("members").insert([payload]);
+        error = res.error;
+      }
+
+      if (error) {
+        console.error("Error saving biodata:", error);
+        alert("Failed to save biodata: " + error.message);
+      } else {
+        if (isSubmit) {
+          alert("Biodata submitted for verification!");
+        } else {
+          alert("Draft saved successfully.");
+        }
+        
+        // Reload data to get the assigned ID if we just inserted
+        if (!payload.id) {
+          const { data } = await supabase.from("members").select("*").eq("user_id", user.id).single();
+          if (data) setMemberData(data);
+        }
       }
     }
     setSaving(false);
@@ -84,11 +113,11 @@ export default function BiodataPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-parchment-muted">Degree / Course</label>
-              <input type="text" value={memberData.degree || ""} onChange={(e) => handleChange("degree", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" placeholder="e.g., BS Computer Science" />
+              <input type="text" value={memberData.course || ""} onChange={(e) => handleChange("course", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" placeholder="e.g., BS Computer Science" />
             </div>
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-widest text-parchment-muted">Institution</label>
-              <input type="text" value={memberData.institution || ""} onChange={(e) => handleChange("institution", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" />
+              <input type="text" value={memberData.college || ""} onChange={(e) => handleChange("college", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" />
             </div>
           </div>
         );
@@ -131,7 +160,7 @@ export default function BiodataPage() {
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-xs uppercase tracking-widest text-parchment-muted">Permanent Address</label>
-              <textarea value={memberData.address || ""} onChange={(e) => handleChange("address", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" rows={3}></textarea>
+              <textarea value={memberData.current_address || ""} onChange={(e) => handleChange("current_address", e.target.value)} className="w-full bg-onyx border border-onyx-line rounded p-2 text-parchment focus:border-gold outline-none" rows={3}></textarea>
             </div>
           </div>
         );
